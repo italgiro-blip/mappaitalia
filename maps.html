@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MAPPA INTERATTIVA DELLE REGIONI D'ITALIA | Pro</title>
+
+    <!-- Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;800;900&family=Roboto+Condensed:wght@400;700&display=swap" rel="stylesheet">
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <!-- CSS Proprio -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- HEADER FLOTTANTE -->
+    <header class="map-overlay-header">
+        <div class="header-content">
+            <img src="./images/img2.png" alt="Bandiera d'Italia" class="map-logo">
+            <div class="header-text">
+                <h1 id="mainTitle">CLASSIFICAZIONE DATI · ITALIA</h1>
+                <span class="version-badge">v2.0 PRO</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- PANNELLO DI CONTROLLO SINISTRO -->
+    <aside class="controls">
+        <div class="panel-header">
+            <h3>PARAMETRI VISUALI</h3>
+            <div class="status-dot"></div>
+        </div>
+
+        <button type="button" id="btnCargarGeoJSON" class="map-button">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+            IMPORTA LIVELLO
+        </button>
+
+        <div class="separator"></div>
+
+        <div class="control-group">
+            <label>MAPPA BASE
+                <select id="baseMapSelect">
+                    <option value="satellite">Satellite (Esri)</option>
+                    <option value="streets">OpenStreetMap</option>
+                    <option value="dark">Carto Voyager</option>
+                </select>
+            </label>
+
+            <label>METODO STATISTICO
+                <select id="classificationSelect">
+                    <option value="jenks">Ottimizza gruppi (Jenks)</option>
+                    <option value="equal">Intervalli uguali (Uniforme)</option>
+                    <option value="quartiles">Distribuzione di frequenza (Quartili)</option>
+                </select>
+            </label>
+
+            <label>SCHEMA COLORI
+                <select id="paletteSelect">
+                    <option value="reds" selected>Rossi</option>
+                    <option value="yellows">Gialli</option>
+                    <option value="blues">Blu</option>
+                    <option value="greens">Verdi</option>
+                    <option value="purples">Lilla</option>
+                </select>
+            </label>
+
+            <label>UNITÀ AMMINISTRATIVA
+                <select id="labelSelect">
+                    <option value="">Caricamento dati...</option>
+                </select>
+            </label>
+        </div>
+
+        <!-- SCHEDA INFORMATIVA -->
+        <div id="infoBox" class="info-card">
+            <div class="info-row">
+                <span class="info-label">Amministrazione</span>
+                <span id="detailNAME_1" class="info-value">--</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Valore</span>
+                <span id="detailTax_rate" class="info-value highlight">--</span>
+            </div>
+        </div>
+    </aside>
+
+    <!-- IMMAGINI LATERALI -->
+    <div class="side-images">
+        <div class="image-card">
+            <img src="./images/img2.png" alt="Bandiera d'Italia">
+        </div>
+        <div class="image-card">
+            <img src="./images/img.png" alt="Mappa d'Italia">
+        </div>
+    </div>
+
+    <!-- MAPPA -->
+    <div id="map"></div>
+
+    <!-- Script -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="scripts.js"></script>
+</body>
+</html>
