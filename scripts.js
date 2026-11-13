@@ -40,7 +40,9 @@ document.addEventListener('DOMContentLoaded', () => {
         return colorSchemes[key] || colorSchemes.reds;
     };
 
+    // Funzione per estrarre le proprietà ignorando maiuscole/minuscole
     const getProp = (p, keys) => {
+        if (!p) return null;
         const lowerKeys = keys.map(k => k.toLowerCase());
         const foundKey = Object.keys(p).find(k => lowerKeys.includes(k.toLowerCase()));
         return foundKey ? p[foundKey] : null;
@@ -49,22 +51,25 @@ document.addEventListener('DOMContentLoaded', () => {
     // 2. LOGICA STATISTICA
     function computeBreaks(data, method) {
         const vals = data.features
-            .map(f => parseFloat(getProp(f.properties, ['tasa_promedio', 'Tax_rate', 'Wert', 'valor'])) || 0)
+            .map(f => parseFloat(getProp(f.properties, ['Tax_rate', 'tasa_promedio', 'Wert', 'valor'])) || 0)
             .sort((a, b) => a - b);
-        const min = vals[0], max = vals[vals.length - 1];
+        
+        const min = vals[0];
+        const max = vals[vals.length - 1];
 
         if (method === 'equal') {
             return Array.from({ length: 6 }, (_, i) => min + (i * (max - min) / 5));
         } else if (method === 'quartiles') {
             return [
-                vals[0],
+                min,
                 vals[Math.floor(vals.length * 0.2)],
                 vals[Math.floor(vals.length * 0.4)],
                 vals[Math.floor(vals.length * 0.6)],
                 vals[Math.floor(vals.length * 0.8)],
-                vals[vals.length - 1]
+                max
             ];
         } else {
+            // Jenks semplificato (o default)
             return [
                 min,
                 vals[Math.floor(vals.length * 0.1)],
@@ -77,23 +82,28 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function getColorIndex(v, brk) {
-        for (let i = 0; i < 5; i++) if (v >= brk[i] && v <= brk[i + 1]) return i;
+        for (let i = 0; i < 5; i++) {
+            if (v >= brk[i] && v <= brk[i + 1]) return i;
+        }
         return 4;
     }
 
     // 3. RENDERING
     function renderMap(data) {
-        if (!data) return;
+        if (!data || !data.features) return;
+        
         currentBreaks = computeBreaks(data, document.getElementById('classificationSelect').value);
 
-        if (geojsonLayer) map.removeLayer(geojsonLayer);
+        if (geojsonLayer) {
+            map.removeLayer(geojsonLayer);
+        }
 
         const palette = getPalette();
 
         geojsonLayer = L.geoJSON(data, {
             style: (f) => ({
                 fillColor: palette[getColorIndex(
-                    parseFloat(getProp(f.properties, ['tasa_promedio', 'Tax_rate', 'Wert', 'valor'])) || 0,
+                    parseFloat(getProp(f.properties, ['Tax_rate', 'tasa_promedio', 'Wert', 'valor'])) || 0,
                     currentBreaks
                 )],
                 weight: 1.5,
@@ -101,8 +111,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 fillOpacity: 0.75
             }),
             onEachFeature: (f, layer) => {
-                const n = getProp(f.properties, ['nombre', 'name', 'NAME_1', 'regione']);
-                const t = parseFloat(getProp(f.properties, ['tasa_promedio', 'Tax_rate', 'Wert', 'valor'])) || 0;
+                // Cerca 'NAME_1' o 'name'
+                const n = getProp(f.properties, ['NAME_1', 'name', 'nombre', 'regione']);
+                const t = parseFloat(getProp(f.properties, ['Tax_rate', 'tasa_promedio', 'Wert', 'valor'])) || 0;
 
                 const labelHTML = `
                     <div class="popup-header">${n || 'Sconosciuto'}</div>
@@ -123,12 +134,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 layer.on({
                     mouseover: (e) => {
                         const index = getColorIndex(t, currentBreaks);
-                        resaltarBloqueLegenda(index);
+                        if (typeof window.resaltarBloqueLegenda === 'function') {
+                            window.resaltarBloqueLegenda(index);
+                        }
                         layer.setStyle({ weight: 3, color: '#FFC400', fillOpacity: 0.9 });
                         layer.bringToFront();
                     },
                     mouseout: (e) => {
-                        resetBloqueLegenda();
+                        if (typeof window.resetBloqueLegenda === 'function') {
+                            window.resetBloqueLegenda();
+                        }
                         geojsonLayer.resetStyle(e.target);
                     },
                     click: () => {
@@ -205,20 +220,28 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.innerHTML = 'CARICAMENTO DATI...';
         btn.style.opacity = '0.7';
 
-        // ⚠️ PERCORSO DEL GEOJSON DELL'ITALIA
+        // ⚠️ CONTROLLA CHE IL FILE SIA NELLA STESSA CARTELLA DI INDEX.HTML
         fetch('Italia.geojson')
-            .then(r => r.json())
+            .then(r => {
+                if (!r.ok) throw new Error(`HTTP ${r.status} - File non trovato`);
+                return r.json();
+            })
             .then(data => {
                 currentData = data;
                 renderMap(data);
-                map.fitBounds(geojsonLayer.getBounds(), { padding: [30, 30] });
+
+                // Protezione contro l'errore getBounds
+                if (geojsonLayer) {
+                    map.fitBounds(geojsonLayer.getBounds(), { padding: [30, 30] });
+                }
 
                 const select = document.getElementById('labelSelect');
                 select.innerHTML = '<option value="">Seleziona regione...</option>';
                 const nomi = data.features
-                    .map(f => getProp(f.properties, ['nombre', 'name', 'NAME_1', 'regione']))
+                    .map(f => getProp(f.properties, ['NAME_1', 'name', 'nombre', 'regione']))
                     .filter(n => n)
                     .sort();
+                
                 nomi.forEach(name => select.add(new Option(name, name)));
 
                 btn.innerHTML = originalText;
@@ -233,17 +256,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('labelSelect').onchange = (e) => {
         const sel = e.target.value;
-        if (!sel) return;
+        if (!sel || !geojsonLayer) return;
 
         geojsonLayer.resetStyle();
 
         geojsonLayer.eachLayer(layer => {
-            const nome = getProp(layer.feature.properties, ['nombre', 'name', 'NAME_1', 'regione']);
+            const nome = getProp(layer.feature.properties, ['NAME_1', 'name', 'nombre', 'regione']);
 
             if (nome === sel) {
                 map.fitBounds(layer.getBounds(), { padding: [100, 100], maxZoom: 10 });
 
-                const v = getProp(layer.feature.properties, ['tasa_promedio', 'Tax_rate', 'Wert', 'valor']) || 0;
+                const v = getProp(layer.feature.properties, ['Tax_rate', 'tasa_promedio', 'Wert', 'valor']) || 0;
 
                 document.getElementById('detailNAME_1').innerText = sel;
                 document.getElementById('detailTax_rate').innerText = parseFloat(v).toFixed(1);
