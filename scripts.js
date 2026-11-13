@@ -206,7 +206,7 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.style.opacity = '0.7';
 
         // ⚠️ PERCORSO DEL GEOJSON DELL'ITALIA
-        fetch('italia.geojson')
+        fetch('Italia.geojson')
             .then(r => r.json())
             .then(data => {
                 currentData = data;
