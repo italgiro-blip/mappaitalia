@@ -238,6 +238,13 @@ Modifica l'oggetto dei livelli in `js/app.js` e aggiungi nuovi URL di tile (Tile
 
 Questo progetto è distribuito sotto licenza **MIT**. Consulta il file `LICENSE` per maggiori informazioni.
 
+
+## Crediti ed Esclusione di Responsabilità (Disclaimer)
+
+Questo progetto è un visualizzatore GIS indipendente realizzato esclusivamente a scopo informativo, didattico o dimostrativo. Non è in alcun modo affiliato, associato, autorizzato o approvato dal Governo della Repubblica Italiana o da altri enti istituzionali.
+
+Gli elementi grafici utilizzati per rappresentare il territorio italiano (inclusa la rielaborazione illustrativa dell'emblema) hanno unicamente funzione descrittiva e geografica all'interno dell'interfaccia. Il codice sorgente del progetto è distribuito secondo i termini della licenza indicata nel repository.
+
 ---
 
 ## 👤 Autore
